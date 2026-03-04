@@ -1,0 +1,19 @@
+name: projective_orchestration
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy
+  - pandas
+  - matplotlib
+  - tqdm
+  - pretty_midi
+  - pytorch
+  - torchvision
+  - torchaudio
+  - pip
+
+# to set up:
+# conda env create -f environment.yml
+# conda activate projective_orchestration

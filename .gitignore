@@ -1,0 +1,18 @@
+# Python / venv
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Model artifacts (recommended: don't version weights)
+checkpoints/**/*.pt
+checkpoints/**/*.pth
+checkpoints/**/*.ckpt
+checkpoints/**/*.npy
+
+# Torch build / binaries (extra safety)
+*.dylib
+*.so
