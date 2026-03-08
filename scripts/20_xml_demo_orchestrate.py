@@ -24,65 +24,7 @@ from src.io.musicxml_io import (
 )
 from src.render.assign import assign_events_to_parts, DEFAULT_PARTS
 from src.render.write_xml import write_orchestral_musicxml
-
-# NEW MODEL
-from models.stage1_encoder import Stage1Encoder, Stage1Config
-
-
-def load_stage1_model(
-    ckpt_path: str,
-    device: torch.device,
-) -> tuple[Stage1Encoder, Stage1Config]:
-    ckpt = torch.load(ckpt_path, map_location=device)
-    cfg = Stage1Config(**ckpt["config"])
-    model = Stage1Encoder(cfg).to(device)
-    model.load_state_dict(ckpt["model"])
-    model.eval()
-    return model, cfg
-
-
-@torch.no_grad()
-def predict_instrument_activity_chunked(
-    model: Stage1Encoder,
-    cfg: Stage1Config,
-    roll: np.ndarray,
-    onset: np.ndarray,
-    device: torch.device,
-    batch_chunk: int = 512,
-) -> np.ndarray:
-    """
-    Returns instrument_activity_hat: (T,129) in [0,1]
-    """
-    T = roll.shape[0]
-    if T == 0:
-        return np.zeros((0, cfg.d_out), dtype=np.float32)
-
-    # Build input
-    if cfg.d_in == 256:
-        x = np.concatenate([roll, onset], axis=1).astype(np.float32)
-    else:
-        x = roll.astype(np.float32)
-
-    out = np.zeros((T, cfg.d_out), dtype=np.float32)
-
-    # IMPORTANT: learned positional encoding requires chunk_len <= cfg.max_len
-    chunk = min(int(batch_chunk), int(cfg.max_len))
-
-    for s in range(0, T, chunk):
-        e = min(T, s + chunk)
-
-        x_t = torch.from_numpy(x[s:e]).unsqueeze(0).to(device)  # (1,chunk,D)
-        logits = model(x_t)                                     # (1,chunk,129)
-
-        out[s:e] = (
-            torch.sigmoid(logits)[0]
-            .detach()
-            .cpu()
-            .numpy()
-            .astype(np.float32)
-        )
-
-    return out
+from src.inference.stage1 import load_stage1_model, predict_instrument_activity_chunked
 
 
 def main() -> None:
